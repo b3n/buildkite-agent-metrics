@@ -63,9 +63,12 @@ func (cb *CloudWatchBackend) Collect(r *collector.Result) error {
 	svc := cloudwatch.New(sess)
 	metrics := []*cloudwatch.MetricDatum{}
 
+	// Set the baseline org dimension
+	dimensions := []*cloudwatch.Dimension{
+		&cloudwatch.Dimension{Name: aws.String("Org"), Value: aws.String(r.Org)},
+	}
 
 	// Add custom dimension if provided
-	dimensions := []*cloudwatch.Dimension{}
 	for _, d := range cb.dimensions {
 		log.Printf("Using custom Cloudwatch dimension of [ %s = %s ]", d.Key, d.Value)
 
@@ -86,12 +89,6 @@ func (cb *CloudWatchBackend) Collect(r *collector.Result) error {
 		)
 
 		// Add per-queue metrics
-		metrics = append(metrics, cloudwatchMetrics(c, queueDimensions)...)
-
-		// Then the queue + the org
-		dimensions = append(queueDimensions,
-			&cloudwatch.Dimension{Name: aws.String("Org"), Value: aws.String(r.Org)},
-		)
 		metrics = append(metrics, cloudwatchMetrics(c, queueDimensions)...)
 	}
 
