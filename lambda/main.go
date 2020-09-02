@@ -20,6 +20,8 @@ import (
 	"github.com/buildkite/buildkite-agent-metrics/collector"
 	"github.com/buildkite/buildkite-agent-metrics/token"
 	"github.com/buildkite/buildkite-agent-metrics/version"
+
+    "github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -91,9 +93,9 @@ func Handler(ctx context.Context, evt json.RawMessage) (string, error) {
 		Endpoint:  "https://agent.buildkite.com/v3",
 		Token:     bkToken,
 		Queues:    queues,
-		Quiet:     quiet,
-		Debug:     false,
-		DebugHttp: false,
+		Quiet:     false,
+		Debug:     true,
+		DebugHttp: true,
 	}
 
 	switch strings.ToLower(backendOpt) {
@@ -122,13 +124,18 @@ func Handler(ctx context.Context, evt json.RawMessage) (string, error) {
 
 	res, err := c.Collect()
 	if err != nil {
+		fmt.Printf("1: %v\n", err)
 		return "", err
 	}
 
 	res.Dump()
 
+	fmt.Printf("Result from BK:")
+	spew.Dump(res)
+
 	err = b.Collect(res)
 	if err != nil {
+		fmt.Printf("2: %v\n", err)
 		return "", err
 	}
 
@@ -136,6 +143,7 @@ func Handler(ctx context.Context, evt json.RawMessage) (string, error) {
 	if ok {
 		err := original.Close()
 		if err != nil {
+			fmt.Printf("3: %v\n", err)
 			return "", err
 		}
 	}
